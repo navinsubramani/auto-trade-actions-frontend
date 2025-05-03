@@ -1,12 +1,12 @@
 import yaml
 import streamlit as st
+import os
 
-from yaml.loader import SafeLoader
 from streamlit_authenticator import Authenticate
+from dotenv import load_dotenv
 
-with open('secrets.yaml', 'r', encoding='utf-8') as file:
-    config = yaml.load(file, Loader=SafeLoader)
-
+# Load environment variables from .env file
+load_dotenv(override=True)
 
 class CustomPageState:
     """Custom session state class to manage session state variables."""
@@ -17,11 +17,22 @@ class CustomPageState:
         self.username = "Unknown User"
         self.password = None
 
+        username = os.getenv('USERNAME')
+        credentials = {
+            'usernames': {
+                username: {
+                    'email': os.getenv('EMAIL'),
+                    'name': os.getenv('NAME'),
+                    'password': os.getenv('PASSWORD')
+                }
+            }
+        }
+
         self.authenticator = Authenticate(
-            config['credentials'],
-            config['cookie']['name'],
-            config['cookie']['key'],
-            config['cookie']['expiry_days']
+            credentials,
+            cookie_expiry_days=int(os.getenv('EXPIRY_DAYS', 30)),
+            cookie_name=os.getenv('COOKIE_KEY'),
+            api_key=os.getenv('COOKIE_NAME'),
         )
 
     def login(self):

@@ -87,11 +87,22 @@ class CustomPageState:
             location='sidebar'
         )
 
+        st.sidebar.button('Refresh', on_click=self.show_takeprofit_stoploss_data)
+        st.sidebar.subheader("Algo Pro Alert")
+        st.sidebar.code("https://discord.com/api/webhooks/1314828456772632597/j55e9ioCqX7grckFil7L0OyXSUIc-HOUq2Vg3enB9QOj-bG5AKw0M1Bk7k333SODO8ml")
+        st.sidebar.subheader("Price Alert")
+        st.sidebar.code("https://discord.com/api/webhooks/1321529174590226432/wQoyGaIlkql0PWJ2oFHg7XJxran_DJCUUK1qcvP_3sgitsL8g_X471dog28OXX2DkESA")
+        st.sidebar.subheader("Strategy Note")
+        st.sidebar.text("strategy1 / Take Profit at price points and move stop loss: All 3 TP and SL must be set. No runner.")
+        st.sidebar.text("strategy2 / Move stop loss at price points: All 3 TP and SL must be set. Runner is left open.")
+        st.sidebar.text("strategy3 / Nill")
+        st.sidebar.text("strategy4 / Move stop loss at profit taken: All 3 TP and SL must be set. No runner.")
+        st.sidebar.text("strategy5 / Trialing Stop Loss: SL must be set. No runner.")
+
     def show_tradescreens(self):
         """Function to display the trade screens."""
 
         st.sidebar.title(f"Welcome {self.name}")
-        st.sidebar.text("This application is for experimental purposes only.")
 
     def show_takeprofit_stoploss_data(self):
         """Function to display take profit and stop loss data."""
@@ -100,6 +111,7 @@ class CustomPageState:
         # Create a container with two vertical layouts
         id = None
         ticker = None
+        strategy = ""
         tp1 = None
         tp2 = None
         tp3 = None
@@ -128,6 +140,7 @@ class CustomPageState:
             row = selection["selection"]["rows"][0]
             id = data.iloc[row]['id']
             ticker = data.iloc[row]['ticker']
+            strategy = data.iloc[row]['strategy']
             tp1 = data.iloc[row]['tp1']
             tp2 = data.iloc[row]['tp2']
             tp3 = data.iloc[row]['tp3']
@@ -150,15 +163,15 @@ class CustomPageState:
                     y='Close',
                 )
                 fig.update_yaxes(autorange=True)
-                #if tp1 is a valid number:
-                if is_number(tp1):
-                    fig.add_hline(y=tp1, line_color="green", line_width=1, line_dash="dash", annotation_text=f"TP1 - {tp1}", annotation_position="top left")
-                if is_number(tp2):
-                    fig.add_hline(y=tp2, line_color="green", line_width=1.5, line_dash="dash", annotation_text=f"TP2 - {tp2}", annotation_position="top left")
-                if is_number(tp3):
-                    fig.add_hline(y=tp3, line_color="green", line_width=2, line_dash="dash", annotation_text=f"TP3 - {tp3}", annotation_position="top left")
-                if is_number(sl):    
-                    fig.add_hline(y=sl, line_color="red", line_width=2, line_dash="dash", annotation_text=f"SL - {sl}", annotation_position="top left")
+                if strategy == "strategy1" or strategy == "strategy2":
+                    if is_number(tp1):
+                        fig.add_hline(y=tp1, line_color="green", line_width=1, line_dash="dash", annotation_text=f"TP1 - {tp1}", annotation_position="top left")
+                    if is_number(tp2):
+                        fig.add_hline(y=tp2, line_color="green", line_width=1.5, line_dash="dash", annotation_text=f"TP2 - {tp2}", annotation_position="top left")
+                    if is_number(tp3):
+                        fig.add_hline(y=tp3, line_color="green", line_width=2, line_dash="dash", annotation_text=f"TP3 - {tp3}", annotation_position="top left")
+                    if is_number(sl):    
+                        fig.add_hline(y=sl, line_color="red", line_width=2, line_dash="dash", annotation_text=f"SL - {sl}", annotation_position="top left")
                 st.plotly_chart(fig, use_container_width=True)        
             else:
                 st.warning("Please select a row to view the chart.")
@@ -166,29 +179,34 @@ class CustomPageState:
         # Edit the data
         # ----------------------------------------
         with edit_tab:
-            if id is not None:
-                st.subheader("Edit Take Profit and Stop Loss Data")
-                row_data = data.iloc[row]
-                row_data = pd.DataFrame(row_data).T
-                row_data = row_data.reset_index(drop=True)
-                row_data = row_data.drop(columns=['id'])
-                edited_row_data = st.data_editor(
-                    row_data,
-                    disabled=False,
-                )
+            
+            try:
+                if id is not None:
+                    st.subheader("Edit Take Profit and Stop Loss Data")
+                    row_data = data.iloc[row]
+                    row_data = pd.DataFrame(row_data).T
+                    row_data = row_data.reset_index(drop=True)
+                    row_data = row_data.drop(columns=['id'])
+                    edited_row_data = st.data_editor(
+                        row_data,
+                        disabled=False,
+                    )
 
-                col1, col2, col3, col4 = st.columns([1, 1, 1, 10])
+                    col1, col2, col3, col4 = st.columns([1, 1, 1, 10])
 
-                if col1.button("Update"):
-                    self.supabase_client.update_tpsl_row(id, edited_row_data)
+                    if col1.button("Update"):
+                        self.supabase_client.update_tpsl_row(id, edited_row_data)
 
-                if col2.button("Delete"):
-                    self.supabase_client.delete_tpsl_row(id)
+                    if col2.button("Add"):
+                        self.supabase_client.insert_tpsl_row(edited_row_data)
 
-                if col3.button("Add"):
-                    self.supabase_client.insert_tpsl_row(edited_row_data)
-            else:
-                st.warning("Please select a row to edit.")
+                    if col3.button("Delete"):
+                        self.supabase_client.delete_tpsl_row(id)
+
+                else:
+                    st.warning("Please select a row to edit.")
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
 
 # Initialize the custom page state
 mypage = CustomPageState()

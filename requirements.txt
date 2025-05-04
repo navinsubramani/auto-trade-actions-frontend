@@ -1,3 +1,6 @@
 streamlit
 streamlit-authenticator
 dotenv
+supabase
+yfinance
+plotly

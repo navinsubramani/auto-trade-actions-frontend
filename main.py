@@ -89,9 +89,9 @@ class CustomPageState:
 
         st.sidebar.button('Refresh', on_click=self.show_takeprofit_stoploss_data)
         st.sidebar.subheader("Algo Pro Alert")
-        st.sidebar.code("https://discord.com/api/webhooks/1314828456772632597/j55e9ioCqX7grckFil7L0OyXSUIc-HOUq2Vg3enB9QOj-bG5AKw0M1Bk7k333SODO8ml")
+        st.sidebar.code(f"{os.getenv('algo_pro_webhook')}")
         st.sidebar.subheader("Price Alert")
-        st.sidebar.code("https://discord.com/api/webhooks/1321529174590226432/wQoyGaIlkql0PWJ2oFHg7XJxran_DJCUUK1qcvP_3sgitsL8g_X471dog28OXX2DkESA")
+        st.sidebar.code(f"{os.getenv('price_alert_webhook')}")
         st.sidebar.subheader("Strategy Note")
         st.sidebar.text("strategy1 / Take Profit at price points and move stop loss: All 3 TP and SL must be set. No runner.")
         st.sidebar.text("strategy2 / Move stop loss at price points: All 3 TP and SL must be set. Runner is left open.")
